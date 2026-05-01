@@ -1,5 +1,8 @@
 # INAGHAN — 2D Fighting Game
 
+🎮 **[Play it live in your browser →](https://marouanbouderz.github.io/Inaghan_2d/)**
+
+
 > A fast-paced two-player local fighting game built entirely with Vanilla JavaScript, HTML5 Canvas, and CSS.
 
 ---
