@@ -4,9 +4,13 @@
 
 ---
 
-<!-- Add a gameplay GIF or screenshot here -->
-<!-- ![Gameplay](screenshots/gameplay.gif) -->
-> **TODO:** Add a gameplay GIF or screenshot to `screenshots/` and uncomment the line above.
+## Screenshots
+
+| Main Menu                           | Controls                                    |
+|-------------------------------------|---------------------------------------------|
+| ![Main Menu](screenshots/menu.png)  | ![Controls](screenshots/controls.png)       |
+
+![Gameplay](screenshots/gameplay.png)
 
 ---
 
