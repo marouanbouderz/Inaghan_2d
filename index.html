@@ -1,0 +1,75 @@
+<head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Uncial+Antiqua&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/css/style.css">
+  <link rel="stylesheet" href="src/css/menu.css">
+</head>
+<body>
+
+  <div class="game-wrapper">
+
+    <!-- HUD -->
+    <div class="hud">
+
+      <!-- Player portrait -->
+      <div class="avatar avatar--player">
+        <img class="avatar__img" src="assets/images/ui/shadow.png" alt="P1">
+      </div>
+
+      <!-- Player health -->
+      <div class="health-bar health-bar--left">
+        <div class="health-bar__bg"></div>
+        <div id="playerHealth" class="health-bar__fill"></div>
+        <div class="health-segments"></div>
+        <span class="player-label player-label--left">P1</span>
+      </div>
+
+      <!-- Timer -->
+      <div class="timer-wrapper">
+        <div class="timer-label">TIME</div>
+        <div id="timer"><span id="timer-num">60</span></div>
+      </div>
+
+      <!-- Enemy health -->
+      <div class="health-bar health-bar--right">
+        <div class="health-bar__bg"></div>
+        <div id="enemyHealth" class="health-bar__fill"></div>
+        <div class="health-segments"></div>
+        <span class="player-label player-label--right">P2</span>
+      </div>
+
+      <!-- Enemy portrait -->
+      <div class="avatar avatar--enemy">
+        <img class="avatar__img" src="assets/images/ui/wizard.png" alt="P2">
+      </div>
+
+    </div>
+
+    <!-- Win/lose message -->
+    <div id="displayText">Tie</div>
+
+    <!-- Play Again -->
+    <div id="playAgain">
+      <button id="playAgainBtn" onclick="restartGame()">
+        &gt;&gt; PLAY AGAIN &lt;&lt;
+      </button>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <!-- Countdown overlay (3 · 2 · 1 · FIGHT!) -->
+    <div id="countdown"></div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"
+    integrity="sha512-H6cPm97FAsgIKmlBA4s774vqoN24V5gSQL4yBTDOY2su2DeXZVhQPxFK4P6GPdnZqM9fg1G3cMv5wD7e6cFLZQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="src/js/sounds.js"></script>
+  <script src="src/js/utils.js"></script>
+  <script src="src/js/classes.js"></script>
+  <script src="src/js/menu.js"></script>
+  <script src="src/js/main.js"></script>
+
+</body>

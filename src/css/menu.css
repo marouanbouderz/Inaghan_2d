@@ -1,0 +1,537 @@
+﻿/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   MAIN MENU  â€” fantasy / medieval pixel-art style
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   CUSTOMIZATION QUICK-REFERENCE
+     Title color  â†’ --menu-title-color / --menu-title-shadow / --menu-title-glow
+     Button color â†’ --menu-btn-color   / --menu-btn-shadow
+     Font         â†’ --menu-font  (any Google Font loaded in index.html)
+     Background   â†’ --menu-bg    (swap the url() path)
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+:root {
+  --menu-title-color:  #c2185b;
+  --menu-title-shadow: #7b0026;
+  --menu-title-glow:   rgba(194, 24, 91, 0.75);
+  --menu-btn-color:    #c2185b;
+  --menu-btn-shadow:   #7b0026;
+  --menu-font:         'Uncial Antiqua', cursive;
+  /* Background is now a parallax layer in JS â€” change the url in _buildParallaxScene() */
+}
+
+/* â”€â”€ Overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+#main-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;               /* toggled to flex by Menu.show()  */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #000;            /* fallback while layers load       */
+  opacity: 0;
+  transition: opacity 0.55s ease;
+  pointer-events: none;
+  overflow: hidden;            /* clips the overscaled parallax layers */
+}
+
+/* â”€â”€ Parallax scene â€” contains all depth layers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.parallax-scene {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/*
+  Base parallax layer.
+  Each .pl is slightly LARGER than the viewport (inset: -5%) so that
+  translating it by up to ~30 px never reveals an empty edge.
+  Only `transform` is animated â€” GPU-composited, no layout/paint cost.
+  The `will-change` hint promotes each layer to its own compositor layer.
+*/
+.pl {
+  position: absolute;
+  inset: -5%;                  /* overflow = 5% of viewport on every side  */
+  will-change: transform;
+}
+
+/* Layer 1 â€” farthest: the background image (multiplier 12 px) */
+.pl--bg {
+  background-image: url('../../assets/images/backgrounds/battleground.png');
+  background-size: cover;
+  background-position: center;
+}
+
+/*
+  Layer 2 â€” mid distance: atmospheric haze (multiplier 22 px).
+  Pure CSS gradient â€” no extra image needed.
+  Its offset relative to layer 1 is what sells the depth illusion.
+*/
+.pl--fog {
+  background:
+    radial-gradient(ellipse 90% 55% at 50% 105%,
+      rgba(0, 0, 20, 0.45) 0%, transparent 70%),
+    radial-gradient(ellipse 55% 35% at 85% 15%,
+      rgba(15, 0, 8, 0.3) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 30% at 10% 80%,
+      rgba(5, 0, 15, 0.25) 0%, transparent 60%);
+}
+
+#main-menu.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* â”€â”€ Vignette / readability gradient â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.menu-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.78) 100%),
+    linear-gradient(to bottom,
+      rgba(0,0,0,0.65) 0%,
+      rgba(0,0,0,0.18) 35%,
+      rgba(0,0,0,0.18) 65%,
+      rgba(0,0,0,0.75) 100%
+    );
+  pointer-events: none;
+}
+
+/* â”€â”€ Centre content card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* will-change lets the browser pre-promote this to its own GPU layer      */
+.menu-content {
+  will-change: transform;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 44px 64px 48px;
+  background: rgba(0, 0, 0, 0.48);
+  border: 1px solid rgba(194, 24, 91, 0.28);
+  box-shadow:
+    0 0 50px rgba(194, 24, 91, 0.12),
+    inset 0 0 40px rgba(0, 0, 0, 0.35);
+  border-radius: 3px;
+}
+
+/* â”€â”€ Title row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.menu-title-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.menu-flourish {
+  color: var(--menu-title-color);
+  font-size: 2.4rem;
+  line-height: 1;
+  text-shadow: 0 0 12px var(--menu-title-glow);
+  user-select: none;
+}
+
+/* â”€â”€ Title text â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Change font-size clamp() values to scale the title up/down            */
+.menu-title {
+  font-family: var(--menu-font);
+  font-size: clamp(2.4rem, 5.5vw, 4.8rem);
+  color: var(--menu-title-color);
+  text-shadow:
+     2px  2px 0   var(--menu-title-shadow),
+    -2px  2px 0   var(--menu-title-shadow),
+     2px -2px 0   var(--menu-title-shadow),
+    -2px -2px 0   var(--menu-title-shadow),
+     0    0   22px var(--menu-title-glow),
+     0    0   44px rgba(194, 24, 91, 0.28);
+  letter-spacing: 5px;
+  margin: 0;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* â”€â”€ Subtitle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.menu-subtitle {
+  font-family: var(--menu-font);
+  font-size: clamp(0.6rem, 1.4vw, 0.9rem);
+  color: rgba(194, 24, 91, 0.65);
+  letter-spacing: 7px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* â”€â”€ Horizontal rule â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.menu-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right,
+    transparent,
+    rgba(194, 24, 91, 0.6) 20%,
+    rgba(194, 24, 91, 0.6) 80%,
+    transparent
+  );
+  margin: 10px 0 4px;
+}
+
+/* â”€â”€ Button list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* â”€â”€ Individual button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Change font-size clamp(), letter-spacing, width to resize buttons     */
+.menu-btn {
+  font-family: var(--menu-font);
+  font-size: clamp(1rem, 2.2vw, 1.5rem);
+  color: var(--menu-btn-color);
+  text-shadow:
+     2px  2px 0   var(--menu-btn-shadow),
+    -1px  1px 0   var(--menu-btn-shadow),
+     0    0   10px rgba(194, 24, 91, 0.35);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px 44px;
+  letter-spacing: 5px;
+  min-width: 260px;
+  text-align: center;
+  position: relative;
+  outline: none;
+  transition:
+    transform   0.14s ease,
+    text-shadow 0.14s ease,
+    color       0.14s ease;
+}
+
+.menu-btn:hover {
+  color: #e91e8c;
+  transform: scale(1.09);
+  text-shadow:
+     2px  2px 0   var(--menu-btn-shadow),
+    -1px  1px 0   var(--menu-btn-shadow),
+     0    0   22px rgba(233, 30, 140, 0.9),
+     0    0   44px rgba(233, 30, 140, 0.38);
+  animation: btnWobble 0.38s ease;
+}
+
+.menu-btn:active {
+  transform: scale(0.96);
+  transition: transform 0.05s;
+}
+
+/* decorative side glyphs on hover */
+.menu-btn:hover::before { content: 'â§ '; opacity: 0.85; }
+.menu-btn:hover::after  { content: ' â¦'; opacity: 0.85; }
+
+@keyframes btnWobble {
+  0%   { transform: scale(1.09) rotate( 0.0deg); }
+  25%  { transform: scale(1.09) rotate(-1.1deg); }
+  55%  { transform: scale(1.09) rotate( 0.9deg); }
+  80%  { transform: scale(1.09) rotate(-0.4deg); }
+  100% { transform: scale(1.09) rotate( 0.0deg); }
+}
+
+/* â”€â”€ Mute / unmute icon (top-right corner) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.menu-mute {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  z-index: 1001;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(194, 24, 91, 0.38);
+  border-radius: 4px;
+  color: #c2185b;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 6px 10px;
+  line-height: 1;
+  transition: background 0.18s, transform 0.12s;
+}
+
+.menu-mute:hover {
+  background: rgba(194, 24, 91, 0.2);
+  transform: scale(1.12);
+}
+
+/* â”€â”€ View switching â€” three swappable panels inside the card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.menu-view {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 14px;
+}
+
+.menu-view.active {
+  display: flex;
+}
+
+/* â”€â”€ Sub-view heading (CONTROLS / OPTIONS) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.menu-sub-title {
+  font-family: var(--menu-font);
+  font-size: 0.78rem;
+  color: var(--menu-title-color);
+  letter-spacing: 7px;
+  text-shadow: 0 0 10px var(--menu-title-glow);
+  margin-bottom: 4px;
+}
+
+/* â”€â”€ RETURN button â€” smaller, slightly dimmed vs main buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.menu-btn--return {
+  margin-top: 8px;
+  font-size: clamp(0.7rem, 1.6vw, 1rem) !important;
+  letter-spacing: 3px !important;
+  min-width: 160px !important;
+  opacity: 0.75;
+}
+
+.menu-btn--return:hover {
+  opacity: 1;
+}
+
+/* â”€â”€ Options panel (always shown when its view is active) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.menu-options-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(194, 24, 91, 0.28);
+  border-radius: 3px;
+  padding: 24px 32px;
+  width: 300px;
+}
+
+.options-label {
+  font-family: var(--menu-font);
+  color: var(--menu-btn-color);
+  font-size: 0.68rem;
+  letter-spacing: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.menu-options-panel input[type="range"] {
+  width: 100%;
+  accent-color: var(--menu-title-color);
+  cursor: pointer;
+  height: 4px;
+}
+
+.menu-difficulty-toggle {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.difficulty-btn {
+  font-family: var(--menu-font);
+  font-size: 0.62rem;
+  color: rgba(194, 24, 91, 0.55);
+  background: transparent;
+  border: 1px solid rgba(194, 24, 91, 0.28);
+  border-radius: 3px;
+  padding: 6px 12px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.14s;
+}
+
+.difficulty-btn.active {
+  color: #c2185b;
+  border-color: #c2185b;
+  background: rgba(194, 24, 91, 0.18);
+  box-shadow: 0 0 10px rgba(194, 24, 91, 0.4), inset 0 0 6px rgba(194, 24, 91, 0.15);
+  text-shadow: 0 0 8px rgba(194, 24, 91, 0.55);
+}
+
+.difficulty-btn:hover:not(.active) {
+  color: rgba(194, 24, 91, 0.7);
+  border-color: rgba(194, 24, 91, 0.45);
+  background: rgba(194, 24, 91, 0.05);
+}
+
+/* â”€â”€ Quit confirmation dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.menu-confirm {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.menu-confirm.open {
+  display: flex;
+}
+
+.menu-confirm__box {
+  background: #0c0006;
+  border: 1px solid rgba(194, 24, 91, 0.48);
+  box-shadow: 0 0 35px rgba(194, 24, 91, 0.28);
+  border-radius: 3px;
+  padding: 34px 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+
+.menu-confirm__text {
+  font-family: var(--menu-font);
+  color: #c2185b;
+  font-size: 1rem;
+  letter-spacing: 3px;
+  text-align: center;
+  text-shadow: 0 0 14px rgba(194, 24, 91, 0.6);
+}
+
+.menu-confirm__actions {
+  display: flex;
+  gap: 22px;
+}
+
+.menu-confirm__actions button {
+  font-family: var(--menu-font);
+  font-size: 0.72rem;
+  letter-spacing: 2px;
+  padding: 9px 22px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.14s;
+}
+
+.confirm-yes {
+  background: rgba(194, 24, 91, 0.14);
+  border: 1px solid #c2185b;
+  color: #c2185b;
+}
+
+.confirm-yes:hover {
+  background: rgba(194, 24, 91, 0.32);
+  box-shadow: 0 0 14px rgba(194, 24, 91, 0.5);
+}
+
+.confirm-no {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.confirm-no:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* â”€â”€ Controls â€” two player columns side-by-side â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.menu-controls__columns {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+
+/* vertical separator between P1 and P2 */
+.ctrl-separator {
+  width: 1px;
+  align-self: stretch;
+  background: linear-gradient(to bottom,
+    transparent,
+    rgba(194, 24, 91, 0.45) 20%,
+    rgba(194, 24, 91, 0.45) 80%,
+    transparent
+  );
+  margin: 0 28px;
+}
+
+/* one player column */
+.ctrl-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 170px;
+}
+
+/* P1 / P2 label above the key rows */
+.ctrl-player-label {
+  font-family: var(--menu-font);
+  font-size: 0.68rem;
+  color: var(--menu-title-color);
+  letter-spacing: 3px;
+  text-shadow: 0 0 8px var(--menu-title-glow);
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+/* one key + action row */
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* â”€â”€ 3-D keyboard key â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Depth is built from four box-shadow layers (no pseudo-elements needed).
+   Only transform:translateY is animated â€” stays on the GPU compositor.   */
+.ctrl-key {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.5rem;
+  letter-spacing: 1px;
+  line-height: 1.5;
+  color: #fce4ec;
+
+  display: inline-block;
+  min-width: 42px;
+  padding: 6px 10px;
+  text-align: center;
+  white-space: nowrap;
+  border-radius: 6px 6px 3px 3px;
+  position: relative;
+
+  /* key-cap face â€” lighter at the top-left corner */
+  background: linear-gradient(158deg, #4d0026 0%, #260013 55%, #140009 100%);
+
+  /* top + side border; bottom darker to merge with the wall */
+  border: 1px solid rgba(194, 24, 91, 0.55);
+  border-top-color:    rgba(255, 110, 170, 0.65);
+  border-bottom-color: rgba(80,  0,  32, 0.9);
+
+  /* Layer breakdown:
+       1 & 2 â€” inset bevels (top highlight, bottom inner shadow)
+       3 & 4 â€” the stacked "wall" that fakes the key's side thickness
+       5     â€” diffuse drop shadow below the wall
+       6     â€” soft pink glow                                            */
+  box-shadow:
+    inset 0  2px 2px rgba(255, 120, 175, 0.22),
+    inset 0 -2px 3px rgba(0,   0,   0,   0.55),
+    0  4px 0     #8b0036,
+    0  6px 0     #4a001c,
+    0  9px 12px  rgba(0, 0, 0, 0.7),
+    0  0   10px  rgba(194, 24, 91, 0.18);
+
+  text-shadow:
+    0 0 8px  rgba(194, 24, 91, 0.9),
+    0 1px 2px rgba(0,   0,  0,  0.95);
+
+  /* staggered float â€” delay set per key via --kd custom property */
+  animation: keyFloat 1.9s ease-in-out infinite;
+  animation-delay: var(--kd, 0s);
+}
+
+@keyframes keyFloat {
+  0%, 100% { transform: translateY(0px);  }
+  48%       { transform: translateY(-6px); }
+}
+
+/* action description next to the key */
+.ctrl-action {
+  font-family: var(--menu-font);
+  font-size: 0.6rem;
+  color: rgba(240, 192, 216, 0.75);
+  letter-spacing: 1px;
+}
+
